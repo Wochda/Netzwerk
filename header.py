@@ -2,25 +2,53 @@ def make_header(HeaderType, Operation, SequenceNumber, UserName, Payload):
     if not Payload:
         Payload = "Error"
 
-        #HeaderType = 2
-        #Operation = 2
-        #SequenceNumber = 0
+    username = UserName
+    if len(username) < 32:
+        username = "0" * (32 - len(username)) + username
+        username = bytearray(username.encode('ascii'))
+    message = bytearray(Payload.encode('ascii'))
 
-    h = bytearray(6)
-    h[6:0] = Payload.encode('ascii')
-    h[5] = len(Payload)
-    h[4] = len(h)
-    h[4:0] = UserName.encode('ascii')
-    h[3] = 32
-    h[2] = SequenceNumber # Sequence Number
-    h[1] = Operation # SYN
-    h[0] = HeaderType #Controll
+    package = bytearray(0)
+    package.append(HeaderType)
+    package.append(Operation)
+    package.append(SequenceNumber)
+    package.extend(username)
+    package.append(0)
+    package.extend(message)
+    package[4] = len(package)
 
-    print()
-
-
-    return h
+    return package
 
 
-def read_header(data):
-    return data.decode('ascii')
+def read_header():
+    HeaderType = 2
+    Operation = 2
+    SequenceNumber = 0
+    UserName = "jamann"
+    Payload = "wos geht?"
+    if not Payload:
+        Payload = "Error"
+
+    username = UserName
+    if len(username) < 32:
+        username = "0" * (32 - len(username)) + username
+        username = bytearray(username.encode('ascii'))
+    message = bytearray(Payload.encode('ascii'))
+
+    package = bytearray(0)
+    package.append(HeaderType)
+    package.append(Operation)
+    package.append(SequenceNumber)
+    package.extend(username)
+    package.append(0)
+    package.extend(message)
+    package[4] = len(package)
+    #package[1] = 6
+    #print(package[1])
+    #print(package)
+    #print(package[36:])
+    #package[36:] = bytearray("hoffentlich".encode('ascii'))
+    #print(package[36:])
+    #p = package[5:35].decode(('ascii'))
+
+#read_header()
