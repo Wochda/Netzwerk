@@ -13,9 +13,8 @@ def make_header(HeaderType, Operation, SequenceNumber, UserName, Payload):
     package.append(Operation)
     package.append(SequenceNumber)
     package.extend(username)
-    package.append(0)
+    package.append(len(message))
     package.extend(message)
-    package[4] = len(package)
 
     return package
 
@@ -43,6 +42,8 @@ def read_header():
     package.append(0)
     package.extend(message)
     package[4] = len(package)
+    print(package)
+    print(package[35])
     #package[1] = 6
     #print(package[1])
     #print(package)
@@ -51,4 +52,4 @@ def read_header():
     #print(package[36:])
     #p = package[5:35].decode(('ascii'))
 
-#read_header()
+read_header()

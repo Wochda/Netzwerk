@@ -52,6 +52,10 @@ def wait_and_receive(host, port):
             if not package:
                 break
 
+# chat muss in 1 laufen nicht in 4!
+# error checking/catch
+# wenn error nachricht schicken
+
 def read_name(package):
     name = package[5:35].decode(('ascii'))
     i = 0
