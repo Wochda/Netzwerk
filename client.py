@@ -1,68 +1,78 @@
 import socket
 import sys
-import string
 import header
 
-def send(host, port) -> string:
-    reply = None
+
+def send(host, port):
+    operation = 2
+    sequence_con = 0
+    sequence_message = 0
+    print("SIMP Client 1.0.0")
+    while True:
+        user_name = input("Your username: ")
+        if len(user_name) > 32:
+            print("Username too long!")
+        if user_name:
+            break
+    user_message = input("Enter Message to send:")
+    if user_message == "quit":
+        exit(1)
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-        if reply is None:
-                while True:
-                    user_name = input("Your username: ")
-                    if len(user_name) > 32:
-                        print("Username too long!")
-                    if user_name:
-                        break
-                user_message = input("Enter message you want to send: ")
-                print("Message sent, waiting for reply...")
-                print("Waiting for connection on port:", port)
-                HeaderType = 2
-                Operation = 2
-                SequenceNumber = 0
-                data_send = header.make_header(HeaderType, Operation, SequenceNumber, user_name, user_message)
-                s.sendto(data_send, (host, port))
+        s.connect((host, port))
+        control_package = header.make_control_message(2, operation, sequence_con, user_name)
+        s.sendto(control_package, (host, port))
+        operation = 6
+        sequence_con = 1
+        chat_message = header.make_chat_message(1, 1, sequence_message, user_name, user_message)
+        s.sendto(chat_message, (host, port))
+        sequence_message = 1
         while True:
-            s.settimeout(10.0)
-            reply = s.recv(1024)
-            s.settimeout(None)
-            if reply[1] == 4:
-                print("["+read_name(reply)+"]", reply[36:].decode('ascii'))
-                user_message = input("Your message: ")
-                if user_message == "quit":
-                    HeaderType = 2
-                    Operation = 8
-                    SequenceNumber = 0
-                    reply = header.make_header(HeaderType, Operation, SequenceNumber, user_name, user_message)
-                    s.sendto(reply, (host, port))
-                    break
-                HeaderType = 1
-                Operation = 4
-                SequenceNumber = 0
-                reply = header.make_header(HeaderType, Operation, SequenceNumber, user_name, user_message)
-                s.sendto(reply, (host, port))
-            if reply[1] == 8:
-                print("["+read_name(reply)+"]", reply[36:].decode('ascii'))
+            if operation == 4:
+                while True:
+                    s.settimeout(10.0)
+                    try:
+                        reply = s.recv(1024)
+                        break
+                    except:
+                        s.sendto(chat_message, (host, port))
+                    s.settimeout(None)
+            if operation != 4:
+                reply = s.recv(1024)
+            if reply[0] == 2 and reply[1] == operation and reply[2] == sequence_con:
+                control_package = header.make_control_message(2, 4, 0, user_name)
+                s.sendto(control_package, (host, port))
+                if operation == 4:
+                    while True:
+                        s.settimeout(10.0)
+                        try:
+                            reply = s.recv(1024)
+                            break
+                        except:
+                            s.sendto(control_package, (host, port))
+                        s.settimeout(None)
+                if operation != 4:
+                    reply = s.recv(1024)
+                operation = 4
+                if reply[0] == 1 and reply[1] == 1 and reply[2] == sequence_message:
+                    print("[" + header.read_name(reply) + "]", reply[36:].decode('ascii'))
+                    user_message = input("Enter Message to send:")
+                    chat_message = header.make_chat_message(1, 1, 0, user_name, user_message)
+                    s.sendto(chat_message, (host, port))
+                    if user_message == "quit":
+                        control_package = header.make_control_message(2, 8, 0, user_name)
+                        s.sendto(control_package, (host, port))
+                        reply = s.recv(1024)
+                        if reply[1] == 4 and reply[0] == 2:
+                            break
+            if reply[0] == 2 and reply[1] == 8 and reply[2] == sequence_con:
+                print(header.read_name(reply), "declined")
+                break
+            if reply[0] == 1 and reply[1] == 8 and reply[2] == sequence_con:
+                print("[" + header.read_name(reply) + "]", reply[36:].decode('ascii'))
                 break
 
-            if reply[1] == 6:
-                print("Conncected by:", host, port)
-                print("[" + read_name(reply) + "]", reply[36:].decode('ascii'))
-                user_message = input("Your message: ")
-                HeaderType = 2
-                Operation = 4
-                SequenceNumber = 0
-                reply = header.make_header(HeaderType, Operation, SequenceNumber, user_name, user_message)
-                s.sendto(reply, (host, port))
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        exit(1)
 
-def read_name(package):
-    name = package[5:35].decode(('ascii'))
-    i = 0
-    for char in name:
-        if char == "0":
-            i += 1
-        else:
-            break
-    return name[i:]
-
-
-data = send(sys.argv[1], int(sys.argv[2]))
+send(sys.argv[1], int(sys.argv[2]))
