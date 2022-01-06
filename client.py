@@ -65,7 +65,7 @@ def send(host, port):
                         if reply[1] == 4 and reply[0] == 2:
                             break
             if reply[0] == 2 and reply[1] == 8 and reply[2] == sequence_con:
-                print(header.read_name(reply), "declined")
+                print(header.read_name(reply), "disconnected")
                 break
             if reply[0] == 1 and reply[1] == 8 and reply[2] == sequence_con:
                 print("[" + header.read_name(reply) + "]", reply[36:].decode('ascii'))

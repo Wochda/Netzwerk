@@ -23,6 +23,7 @@ def wait_and_receive(host, port):
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 print('Waiting for connections...')
                 s.bind((host, port))
+                connection = 1
             if received_operation == 4:
                 while True:
                     s.settimeout(10.0)
@@ -33,13 +34,13 @@ def wait_and_receive(host, port):
                         s.sendto(chat_message, host_from)
                     s.settimeout(None)
                 if package[1] == 2 and client != 0:     #
-                    chat_message = header.make_chat_message(1, 8, 1, user_name, "User already in another chat")
+                    chat_message = header.make_chat_message(1, 8, 1, user_name, "1User already in another chat")
                     s.sendto(chat_message, host_from)
                     continue
             if received_operation != 4:
                 package, host_from = s.recvfrom(1024)
                 if package[1] == 2 and client != 0:
-                    chat_message = header.make_chat_message(1, 8, 1, user_name, "User already in another chat")
+                    chat_message = header.make_chat_message(1, 8, 1, user_name, "2User already in another chat")
                     s.sendto(chat_message, host_from)
                     continue
                 if package[1] == 2 and client == 0:     #
@@ -71,13 +72,13 @@ def wait_and_receive(host, port):
                             s.sendto(control_package, host_from)
                         s.settimeout(None)
                     if package[1] == 2 and client != 0:             #
-                        chat_message = header.make_chat_message(1, 8, 1, user_name, "User already in another chat")
+                        chat_message = header.make_chat_message(1, 8, 1, user_name, "3User already in another chat")
                         s.sendto(chat_message, host_from)
                         continue
                 if received_operation != 4:
                     package, host_from = s.recvfrom(1024)           #
                     if package[1] == 2 and client != 0:
-                        chat_message = header.make_chat_message(1, 8, 1, user_name, "User already in another chat")
+                        chat_message = header.make_chat_message(1, 8, 1, user_name, "4User already in another chat")
                         s.sendto(chat_message, host_from)
                         continue
                 received_operation = 4
@@ -97,6 +98,7 @@ def wait_and_receive(host, port):
                         s.sendto(control_package, host_from)
                         package, host_from = s.recvfrom(1024)
                         if package[1] == 4:
+                            print(header.read_name(package), "disconnected")
                             received_operation = 2
                             received_sequence_con = 0
                             received_sequence_message = 0
